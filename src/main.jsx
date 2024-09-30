@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./app/Layout";
+import ReceiptType from "./app/setting/ReceiptType";
 import AcademicYear from "./app/setting/AcademicYear";
 
 const router = createBrowserRouter([

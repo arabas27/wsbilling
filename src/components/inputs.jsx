@@ -1,6 +1,18 @@
 import clsx from "clsx";
 import PropTypes from "prop-types";
 
+export function InputGroup({ children, className }) {
+  return <div className={clsx("flex flex-col", className)}>{children}</div>;
+}
+
+InputGroup.propTypes = {
+  children: PropTypes.oneOfType([
+    PropTypes.element,
+    PropTypes.arrayOf(PropTypes.element),
+  ]),
+  className: PropTypes.string,
+};
+
 export function TextInput({ name, id, className, placeholder }) {
   return (
     <input

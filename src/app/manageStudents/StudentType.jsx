@@ -5,7 +5,13 @@ import {
   Select,
   TextInput,
 } from "../../components/inputs";
-import { FaSearch, FaPlusCircle, FaWindowClose } from "react-icons/fa";
+import {
+  FaSearch,
+  FaPlusCircle,
+  FaWindowClose,
+  FaEdit,
+  FaTrashAlt,
+} from "react-icons/fa";
 import {
   Table,
   THead,
@@ -18,7 +24,7 @@ import { DefaultButton } from "../../components/buttons";
 import { useState } from "react";
 import { PopUpContainer } from "../../components/popup";
 
-export default function ReceiptType() {
+export default function StudentType() {
   const [isShowPopUp, setIsShowPopUp] = useState(false);
 
   return (
@@ -27,7 +33,7 @@ export default function ReceiptType() {
         {/* Title */}
         <div className="w-full md:w-9/12 lg:w-6/12">
           <div className="text-2xl font-bold bg-sky-600 text-white w-fit rounded p-3 my-6">
-            ประเภทใบเสร็จ
+            ประเภทนักเรียน
           </div>
         </div>
 
@@ -44,7 +50,7 @@ export default function ReceiptType() {
                 <TextInput
                   className="w-full"
                   name="search"
-                  placeholder="พิมพ์ประเภทใบเสร็จที่ต้องการค้นหา"
+                  placeholder="พิมพ์ประเภทนักเรียนที่ต้องการค้นหา"
                 />
                 <button className="bg-sky-600 hover:bg-sky-500 text-white rounded-full p-2">
                   <FaSearch className="w-4 h-4" />
@@ -74,23 +80,27 @@ export default function ReceiptType() {
           <THead>
             <THeadRow>
               <THeadCol>ที่</THeadCol>
-              <THeadCol>ประเภทใบเสร็จ</THeadCol>
+              <THeadCol>ประเภทนักเรียน</THeadCol>
               <THeadCol>ชื่อย่อ</THeadCol>
-              <THeadCol>แบบฟอร์ม</THeadCol>
-              <THeadCol>ขนาดกระดาษ</THeadCol>
-              <THeadCol>โลโก้</THeadCol>
-              <THeadCol>แนวกระดาษ</THeadCol>
+              <THeadCol>แก้ไข</THeadCol>
+              <THeadCol>ลบ</THeadCol>
             </THeadRow>
           </THead>
           <tbody>
             <TRow className="text-center" index={0}>
               <TCol>2</TCol>
-              <TCol className="font-bold">2562</TCol>
-              <TCol className="w-24"></TCol>
-              <TCol className="w-24"></TCol>
-              <TCol className="w-24"></TCol>
-              <TCol className="w-24"></TCol>
-              <TCol className="w-24"></TCol>
+              <TCol className="font-bold">ห้องเรียนชั้น ม.2,3,5,6</TCol>
+              <TCol>ม.2,3,5,6</TCol>
+              <TCol className="w-16">
+                <button className="flex items-center justify-center mx-auto">
+                  <FaEdit className="w-5 h-5 text-yellow-600" />
+                </button>
+              </TCol>
+              <TCol className="w-16">
+                <button className="flex items-center justify-center mx-auto">
+                  <FaTrashAlt className="w-5 h-5 text-red-600" />
+                </button>
+              </TCol>
             </TRow>
           </tbody>
         </Table>
@@ -101,7 +111,7 @@ export default function ReceiptType() {
         <PopUpContainer>
           <Card className="bg-white w-11/12 sm:w-9/12 md:w-6/12 lg:w-4/12 xl:w-3/12 p-3">
             <div className="flex justify-between items-center">
-              <div className="text-xl font-bold">ประเภทใบเสร็จ</div>
+              <div className="text-xl font-bold">ประเภทนักเรียน</div>
               <DefaultButton
                 className="text-xl font-bold rounded-full"
                 onClick={() => setIsShowPopUp(false)}
@@ -112,11 +122,11 @@ export default function ReceiptType() {
             <hr className="border-b-4 border-sky-300" />
             <div className="flex flex-col gap-3 items-center my-3">
               <InputGroup className="w-full">
-                <label htmlFor="receipt">ประเภทใบเสร็จ</label>
+                <label htmlFor="studentType">ประเภทนักเรียน</label>
                 <TextInput
                   className="w-full"
-                  name="receipt"
-                  placeholder="ใบเสร็จรับเงิน สพฐ."
+                  name="studentType"
+                  placeholder="พิมพ์ประเภทนักเรียน"
                 />
               </InputGroup>
               <InputGroup className="w-full">

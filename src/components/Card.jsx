@@ -10,6 +10,9 @@ export default function Card({ children, className }) {
 }
 
 Card.propTypes = {
-  children: PropTypes.array,
+  children: PropTypes.oneOfType([
+    PropTypes.element,
+    PropTypes.arrayOf(PropTypes.element),
+  ]),
   className: PropTypes.string,
 };

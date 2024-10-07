@@ -3,8 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./app/Layout";
-import ReceiptType from "./app/setting/ReceiptType";
-import AcademicYear from "./app/setting/AcademicYear";
+import StudentType from "./app/manageStudents/StudentType";
 
 const router = createBrowserRouter([
   {
@@ -13,7 +12,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <AcademicYear />,
+        element: <StudentType />,
       },
     ],
   },

@@ -34,27 +34,30 @@ export default function AcademicYear() {
         </div>
 
         {/* ส่วนค้นหาข้อมูล */}
-        <Card className="w-full md:w-9/12 lg:w-6/12 p-3">
+        <Card className="w-full md:w-9/12 lg:w-8/12 xl:w-6/12 p-3">
           <div className="flex justify-between border-b-4 border-sky-300">
             <div className="text-lg font-bold">ค้นหา</div>
             <div>จำนวน 0 รายการ</div>
           </div>
-          <div className="flex items-center justify-center mt-9 mb-6">
-            <div className="flex items-center justify-center gap-3 w-full">
-              <TextInput
-                className="w-full md:w-4/6"
-                name="search"
-                placeholder="พิมพ์ปีการศึกษาที่ต้องการค้นหา"
-              />
-              <button className="bg-sky-600 hover:bg-sky-500 text-white rounded-full p-2">
-                <FaSearch className="w-4 h-4" />
-              </button>
-            </div>
+          <div className="flex items-center justify-center my-3">
+            <InputGroup className="w-10/12">
+              <label htmlFor="search">คำค้นหา</label>
+              <div className="flex items-center justify-center gap-3 w-full">
+                <TextInput
+                  className="w-full"
+                  name="search"
+                  placeholder="พิมพ์ปีการศึกษาที่ต้องการค้นหา"
+                />
+                <button className="bg-sky-600 hover:bg-sky-500 text-white rounded-full p-2">
+                  <FaSearch className="w-4 h-4" />
+                </button>
+              </div>
+            </InputGroup>
           </div>
         </Card>
       </div>
 
-      {/* ปุ่มเพิ่มรายการ */}
+      {/* ปุ่มรายการ */}
       <div className="mt-10 mb-3">
         <DefaultButton
           className="bg-teal-600 hover:bg-teal-500 text-white"
@@ -63,7 +66,7 @@ export default function AcademicYear() {
           }}
         >
           <FaPlusCircle className="w-6 h-6" />
-          <div className="font-bold">เพิ่มรายการ</div>
+          <div className="font-bold">เพิ่ม</div>
         </DefaultButton>
       </div>
 

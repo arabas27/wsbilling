@@ -45,7 +45,7 @@ export function THeadCol({ children, className }) {
 }
 
 THeadCol.propTypes = {
-  children: PropTypes.string,
+  children: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
   className: PropTypes.string,
 };
 

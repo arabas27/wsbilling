@@ -1,5 +1,5 @@
 import Card from "../../components/Card";
-import { InputGroup, TextInput } from "../../components/inputs";
+import { InputGroup, Select, TextInput } from "../../components/inputs";
 import {
   FaSearch,
   FaPlusCircle,
@@ -19,7 +19,7 @@ import { DefaultButton } from "../../components/buttons";
 import { useState } from "react";
 import { PopUpContainer } from "../../components/popup";
 
-export default function StudentType() {
+export default function Level() {
   const [isShowPopUp, setIsShowPopUp] = useState(false);
 
   return (
@@ -28,7 +28,7 @@ export default function StudentType() {
         {/* Title */}
         <div className="w-full md:w-9/12 lg:w-6/12">
           <div className="text-2xl font-bold bg-sky-600 text-white w-fit rounded p-3 my-6">
-            ประเภทนักเรียน
+            ระดับชั้นเรียน
           </div>
         </div>
 
@@ -45,7 +45,7 @@ export default function StudentType() {
                 <TextInput
                   className="w-full"
                   name="search"
-                  placeholder="พิมพ์ประเภทนักเรียนที่ต้องการค้นหา"
+                  placeholder="พิมพ์ระดับชั้นที่ต้องการค้นหา"
                 />
                 <button className="bg-sky-600 hover:bg-sky-500 text-white rounded-full p-2">
                   <FaSearch className="w-4 h-4" />
@@ -75,17 +75,19 @@ export default function StudentType() {
           <THead>
             <THeadRow>
               <THeadCol>ที่</THeadCol>
-              <THeadCol>ประเภทนักเรียน</THeadCol>
+              <THeadCol>ระดับชั้นเรียน</THeadCol>
               <THeadCol>ชื่อย่อ</THeadCol>
+              <THeadCol>ประเภทระดับชั้น</THeadCol>
               <THeadCol>แก้ไข</THeadCol>
               <THeadCol>ลบ</THeadCol>
             </THeadRow>
           </THead>
           <tbody>
             <TRow className="text-center" index={0}>
-              <TCol>2</TCol>
-              <TCol className="font-bold">ห้องเรียนชั้น ม.2,3,5,6</TCol>
-              <TCol>ม.2,3,5,6</TCol>
+              <TCol>1</TCol>
+              <TCol className="font-bold">มัธยมศึกษาปีที่ 1</TCol>
+              <TCol>ม.1</TCol>
+              <TCol>มัธยมศึกษา</TCol>
               <TCol className="w-16">
                 <button className="flex items-center justify-center mx-auto">
                   <FaEdit className="w-5 h-5 text-yellow-600" />
@@ -109,7 +111,7 @@ export default function StudentType() {
             style={{ marginTop: window.scrollY + window.innerHeight / 7 }}
           >
             <div className="flex justify-between items-center">
-              <div className="text-xl font-bold">ประเภทนักเรียน</div>
+              <div className="text-xl font-bold">ระดับชั้นเรียน</div>
               <DefaultButton
                 className="text-xl font-bold rounded-full"
                 onClick={() => setIsShowPopUp(false)}
@@ -120,19 +122,27 @@ export default function StudentType() {
             <hr className="border-b-4 border-sky-300" />
             <div className="flex flex-col gap-3 items-center my-3">
               <InputGroup className="w-full">
-                <label htmlFor="studentType">ประเภทนักเรียน</label>
+                <label htmlFor="studentType">ระดับชั้นเรียน</label>
                 <TextInput
                   className="w-full"
                   name="studentType"
-                  placeholder="พิมพ์ประเภทนักเรียน"
+                  placeholder="พิมพ์ระดับชั้นเรียน"
                 />
               </InputGroup>
               <InputGroup className="w-full">
-                <label htmlFor="shortTermReceipt">ชื่อย่อประเภทนักเรียน</label>
+                <label htmlFor="shortTermReceipt">ชื่อย่อระดับชั้นเรียน</label>
                 <TextInput
                   className="w-full"
                   name="shortTermReceipt"
-                  placeholder="ม.1,4"
+                  placeholder="ม.1"
+                />
+              </InputGroup>
+              <InputGroup className="w-full">
+                <label htmlFor="levelType">ชื่อย่อระดับชั้นเรียน</label>
+                <Select
+                  className="w-full"
+                  name="levelType"
+                  optionTexts={["เลือก", "มัธยมศึกษา"]}
                 />
               </InputGroup>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 self-end">

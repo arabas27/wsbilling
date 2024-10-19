@@ -1,5 +1,10 @@
 import Card from "../../components/Card";
-import { InputGroup, TextInput } from "../../components/inputs";
+import {
+  InputGroup,
+  NumberInput,
+  Select,
+  TextInput,
+} from "../../components/inputs";
 import {
   FaSearch,
   FaPlusCircle,
@@ -19,7 +24,7 @@ import { DefaultButton } from "../../components/buttons";
 import { useState } from "react";
 import { PopUpContainer } from "../../components/popup";
 
-export default function StudentType() {
+export default function ClassRoom() {
   const [isShowPopUp, setIsShowPopUp] = useState(false);
 
   return (
@@ -28,7 +33,7 @@ export default function StudentType() {
         {/* Title */}
         <div className="w-full md:w-9/12 lg:w-6/12">
           <div className="text-2xl font-bold bg-sky-600 text-white w-fit rounded p-3 my-6">
-            ประเภทนักเรียน
+            ห้องเรียน
           </div>
         </div>
 
@@ -38,14 +43,21 @@ export default function StudentType() {
             <div className="text-lg font-bold">ค้นหา</div>
             <div>จำนวน 0 รายการ</div>
           </div>
-          <div className="flex items-center justify-center my-3">
+          <div className="flex flex-col items-center justify-center my-3">
+            <InputGroup className="w-10/12">
+              <label htmlFor="searchLevel">ระดับชั้นเรียน</label>
+              <Select
+                name="searchLevel"
+                optionTexts={["ทั้งหมด", "มัธยมศึกษาปีที่ 1"]}
+              />
+            </InputGroup>
             <InputGroup className="w-10/12">
               <label htmlFor="search">คำค้นหา</label>
               <div className="flex items-center justify-center gap-3 w-full">
                 <TextInput
                   className="w-full"
                   name="search"
-                  placeholder="พิมพ์ประเภทนักเรียนที่ต้องการค้นหา"
+                  placeholder="พิมพ์ห้องเรียนที่ต้องการค้นหา"
                 />
                 <button className="bg-sky-600 hover:bg-sky-500 text-white rounded-full p-2">
                   <FaSearch className="w-4 h-4" />
@@ -75,17 +87,19 @@ export default function StudentType() {
           <THead>
             <THeadRow>
               <THeadCol>ที่</THeadCol>
-              <THeadCol>ประเภทนักเรียน</THeadCol>
+              <THeadCol>ระดับชั้นเรียน</THeadCol>
               <THeadCol>ชื่อย่อ</THeadCol>
+              <THeadCol>ประเภทระดับชั้น</THeadCol>
               <THeadCol>แก้ไข</THeadCol>
               <THeadCol>ลบ</THeadCol>
             </THeadRow>
           </THead>
           <tbody>
             <TRow className="text-center" index={0}>
-              <TCol>2</TCol>
-              <TCol className="font-bold">ห้องเรียนชั้น ม.2,3,5,6</TCol>
-              <TCol>ม.2,3,5,6</TCol>
+              <TCol>1</TCol>
+              <TCol className="font-bold">มัธยมศึกษาปีที่ 1</TCol>
+              <TCol>ม.1</TCol>
+              <TCol>มัธยมศึกษา</TCol>
               <TCol className="w-16">
                 <button className="flex items-center justify-center mx-auto">
                   <FaEdit className="w-5 h-5 text-yellow-600" />
@@ -109,7 +123,7 @@ export default function StudentType() {
             style={{ marginTop: window.scrollY + window.innerHeight / 7 }}
           >
             <div className="flex justify-between items-center">
-              <div className="text-xl font-bold">ประเภทนักเรียน</div>
+              <div className="text-xl font-bold">ห้องเรียน</div>
               <DefaultButton
                 className="text-xl font-bold rounded-full"
                 onClick={() => setIsShowPopUp(false)}
@@ -120,19 +134,26 @@ export default function StudentType() {
             <hr className="border-b-4 border-sky-300" />
             <div className="flex flex-col gap-3 items-center my-3">
               <InputGroup className="w-full">
-                <label htmlFor="studentType">ประเภทนักเรียน</label>
-                <TextInput
-                  className="w-full"
-                  name="studentType"
-                  placeholder="พิมพ์ประเภทนักเรียน"
+                <label htmlFor="levelType">ระดับชั้นเรียน</label>
+                <Select
+                  name="levelType"
+                  optionTexts={["ทั้งหมด", "มัธยมศึกษาปีที่ 1"]}
                 />
               </InputGroup>
               <InputGroup className="w-full">
-                <label htmlFor="shortTermReceipt">ชื่อย่อประเภทนักเรียน</label>
+                <label htmlFor="classRoomName">ชื่อห้องเรียน</label>
                 <TextInput
                   className="w-full"
-                  name="shortTermReceipt"
-                  placeholder="ม.1,4"
+                  name="classRoomName"
+                  placeholder="ม.1/1"
+                />
+              </InputGroup>
+              <InputGroup className="w-full">
+                <label htmlFor="section">ห้องที่</label>
+                <NumberInput
+                  className="w-full"
+                  name="section"
+                  onClick={(event) => event.target.select()}
                 />
               </InputGroup>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 self-end">

@@ -13,14 +13,25 @@ InputGroup.propTypes = {
   className: PropTypes.string,
 };
 
-export function TextInput({ name, id, className, placeholder }) {
+export function TextInput({
+  name,
+  id,
+  defaultValue,
+  className,
+  placeholder,
+  onClick,
+  disabled,
+}) {
   return (
     <input
       type="text"
       className={clsx("border border-gray-600 rounded px-3 py-1", className)}
       name={name}
       id={id ? id : name}
+      defaultValue={defaultValue}
       placeholder={placeholder}
+      onClick={onClick}
+      disabled={disabled}
     />
   );
 }
@@ -28,8 +39,11 @@ export function TextInput({ name, id, className, placeholder }) {
 TextInput.propTypes = {
   name: PropTypes.string.isRequired,
   id: PropTypes.string,
+  defaultValue: PropTypes.string,
   className: PropTypes.string,
   placeholder: PropTypes.string,
+  onClick: PropTypes.func,
+  disabled: PropTypes.bool,
 };
 
 export function TextArea({ name, id, className, placeholder, rows = 2 }) {
@@ -59,6 +73,8 @@ export function NumberInput({
   className,
   placeholder,
   defaultValue = 0,
+  onClick,
+  disabled = false,
 }) {
   return (
     <input
@@ -71,6 +87,8 @@ export function NumberInput({
       id={id ? id : name}
       placeholder={placeholder}
       defaultValue={defaultValue}
+      onClick={onClick}
+      disabled={disabled}
     />
   );
 }
@@ -80,7 +98,9 @@ NumberInput.propTypes = {
   id: PropTypes.string,
   className: PropTypes.string,
   placeholder: PropTypes.string,
-  defaultValue: PropTypes.number,
+  defaultValue: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onClick: PropTypes.func,
+  disabled: PropTypes.bool,
 };
 
 export function ControlledNumberInput({
@@ -137,6 +157,7 @@ export function Select({
   optionValues,
   className,
   defaultValue,
+  disabled,
 }) {
   // แจ้งเตือน error ผ่าน console เมื่อตั้งค่า optionValues ที่มีขนาดไม่เท่ากับขนาด optionTexts
   if (optionValues && optionValues.length !== optionTexts.length) {
@@ -155,6 +176,7 @@ export function Select({
           ? defaultValue
           : optionTexts[0]
       }
+      disabled={disabled}
     >
       {optionTexts.map((optionText, index) => {
         return (
@@ -181,6 +203,7 @@ Select.propTypes = {
   optionValues: PropTypes.array,
   className: PropTypes.string,
   defaultValue: PropTypes.string,
+  disabled: PropTypes.bool,
 };
 
 export function ControlledSelect({

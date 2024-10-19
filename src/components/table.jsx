@@ -67,9 +67,12 @@ TRow.propTypes = {
   index: PropTypes.number,
 };
 
-export function TCol({ children, className }) {
+export function TCol({ children, className, colSpan }) {
   return (
-    <td className={clsx("py-1 border border-gray-400", className)}>
+    <td
+      className={clsx("py-1 border border-gray-400", className)}
+      colSpan={colSpan}
+    >
       {children}
     </td>
   );
@@ -78,4 +81,5 @@ export function TCol({ children, className }) {
 TCol.propTypes = {
   children: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   className: PropTypes.string,
+  colSpan: PropTypes.number,
 };

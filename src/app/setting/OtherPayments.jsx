@@ -105,7 +105,10 @@ export default function OtherPayments() {
       {/* Pop up */}
       {isShowPopUp && (
         <PopUpContainer>
-          <Card className="bg-white w-11/12 sm:w-9/12 md:w-6/12 lg:w-4/12 xl:w-3/12 p-3">
+          <Card
+            className="bg-white w-11/12 sm:w-9/12 md:w-6/12 lg:w-4/12 xl:w-3/12 p-3"
+            style={{ marginTop: window.scrollY + window.innerHeight / 7 }}
+          >
             <div className="flex justify-between items-center">
               <div className="text-xl font-bold">เพิ่มรายการรับชำระอื่น ๆ</div>
               <DefaultButton

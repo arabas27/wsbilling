@@ -165,19 +165,19 @@ function Navigator() {
               <li className="border-b py-2 hover:text-sky-600">
                 <a className="flex items-center gap-1" href="#">
                   <FaDotCircle className="w-3 h-3 text-sky-600" />
-                  รายการรับ
+                  รายการชำระเงิน
                 </a>
               </li>
               <li className="border-b py-2 hover:text-sky-600">
                 <a className="flex items-center gap-1" href="#">
                   <FaDotCircle className="w-3 h-3 text-sky-600" />
-                  รายละเอียดรายการรับ
+                  กำหนดรายการชำระ
                 </a>
               </li>
               <li className="border-b py-2 hover:text-sky-600">
                 <a className="flex items-center gap-1" href="#">
                   <FaDotCircle className="w-3 h-3 text-sky-600" />
-                  รายการรับอื่น
+                  รายการชำระอื่น ๆ
                 </a>
               </li>
               <li className="border-b py-2 hover:text-sky-600">

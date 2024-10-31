@@ -5,14 +5,6 @@ export function InputGroup({ children, className }) {
   return <div className={clsx("flex flex-col", className)}>{children}</div>;
 }
 
-InputGroup.propTypes = {
-  children: PropTypes.oneOfType([
-    PropTypes.element,
-    PropTypes.arrayOf(PropTypes.element),
-  ]),
-  className: PropTypes.string,
-};
-
 export function TextInput({
   name,
   id,
@@ -21,6 +13,7 @@ export function TextInput({
   placeholder,
   onClick,
   disabled,
+  onChange,
 }) {
   return (
     <input
@@ -32,19 +25,35 @@ export function TextInput({
       placeholder={placeholder}
       onClick={onClick}
       disabled={disabled}
+      onChange={onChange}
     />
   );
 }
 
-TextInput.propTypes = {
-  name: PropTypes.string.isRequired,
-  id: PropTypes.string,
-  defaultValue: PropTypes.string,
-  className: PropTypes.string,
-  placeholder: PropTypes.string,
-  onClick: PropTypes.func,
-  disabled: PropTypes.bool,
-};
+export function SearchTextInput({
+  name,
+  id,
+  defaultValue,
+  className,
+  placeholder,
+  onClick,
+  onChange,
+  disabled,
+}) {
+  return (
+    <input
+      type="text"
+      className={clsx("outline-0", className)}
+      name={name}
+      id={id ? id : name}
+      defaultValue={defaultValue}
+      placeholder={placeholder}
+      onClick={onClick}
+      onChange={onChange}
+      disabled={disabled}
+    />
+  );
+}
 
 export function TextArea({ name, id, className, placeholder, rows = 2 }) {
   return (
@@ -59,14 +68,6 @@ export function TextArea({ name, id, className, placeholder, rows = 2 }) {
   );
 }
 
-TextArea.propTypes = {
-  name: PropTypes.string.isRequired,
-  id: PropTypes.string,
-  className: PropTypes.string,
-  placeholder: PropTypes.string,
-  rows: PropTypes.number,
-};
-
 export function NumberInput({
   name,
   id,
@@ -74,7 +75,9 @@ export function NumberInput({
   placeholder,
   defaultValue = 0,
   onClick,
+  onChange,
   disabled = false,
+  reference,
 }) {
   return (
     <input
@@ -88,20 +91,12 @@ export function NumberInput({
       placeholder={placeholder}
       defaultValue={defaultValue}
       onClick={onClick}
+      onChange={onChange}
       disabled={disabled}
+      ref={reference}
     />
   );
 }
-
-NumberInput.propTypes = {
-  name: PropTypes.string.isRequired,
-  id: PropTypes.string,
-  className: PropTypes.string,
-  placeholder: PropTypes.string,
-  defaultValue: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  onClick: PropTypes.func,
-  disabled: PropTypes.bool,
-};
 
 export function ControlledNumberInput({
   name,
@@ -131,17 +126,6 @@ export function ControlledNumberInput({
   );
 }
 
-ControlledNumberInput.propTypes = {
-  name: PropTypes.string.isRequired,
-  id: PropTypes.string,
-  className: PropTypes.string,
-  placeholder: PropTypes.string,
-  value: PropTypes.string.isRequired,
-  onClick: PropTypes.func,
-  onChange: PropTypes.func.isRequired,
-  disabled: PropTypes.bool,
-};
-
 /**
  * คืนค่า Select Component
  * @param {string} name ชื่อ name
@@ -158,6 +142,8 @@ export function Select({
   className,
   defaultValue,
   disabled,
+  value,
+  onChange,
 }) {
   // แจ้งเตือน error ผ่าน console เมื่อตั้งค่า optionValues ที่มีขนาดไม่เท่ากับขนาด optionTexts
   if (optionValues && optionValues.length !== optionTexts.length) {
@@ -171,12 +157,10 @@ export function Select({
       className={clsx("border border-gray-600 rounded px-3 py-1", className)}
       name={name}
       id={id ? id : name}
-      defaultValue={
-        defaultValue && optionTexts.find((value) => value === defaultValue)
-          ? defaultValue
-          : optionTexts[0]
-      }
+      defaultValue={defaultValue}
       disabled={disabled}
+      value={value}
+      onChange={onChange}
     >
       {optionTexts.map((optionText, index) => {
         return (
@@ -195,16 +179,6 @@ export function Select({
     </select>
   );
 }
-
-Select.propTypes = {
-  name: PropTypes.string.isRequired,
-  id: PropTypes.string,
-  optionTexts: PropTypes.array.isRequired,
-  optionValues: PropTypes.array,
-  className: PropTypes.string,
-  defaultValue: PropTypes.string,
-  disabled: PropTypes.bool,
-};
 
 export function ControlledSelect({
   name,
@@ -248,18 +222,6 @@ export function ControlledSelect({
   );
 }
 
-ControlledSelect.propTypes = {
-  name: PropTypes.string.isRequired,
-  id: PropTypes.string,
-  optionTexts: PropTypes.array.isRequired,
-  optionValues: PropTypes.array,
-  className: PropTypes.string,
-  value: PropTypes.string.isRequired,
-  onClick: PropTypes.func,
-  onChange: PropTypes.func.isRequired,
-  disabled: PropTypes.bool,
-};
-
 export function FileInput({ name, id, className }) {
   return (
     <input
@@ -270,9 +232,3 @@ export function FileInput({ name, id, className }) {
     />
   );
 }
-
-FileInput.propTypes = {
-  name: PropTypes.string.isRequired,
-  id: PropTypes.string,
-  className: PropTypes.string,
-};

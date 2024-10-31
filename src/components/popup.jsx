@@ -2,7 +2,7 @@ import clsx from "clsx";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 
-export function PopUpContainer({ children, name, className }) {
+export function PopupContainer({ children, name, className }) {
   const [sbHeight, setSbHeight] = useState("");
 
   useEffect(() => {
@@ -33,12 +33,3 @@ export function PopUpContainer({ children, name, className }) {
     </div>
   );
 }
-
-PopUpContainer.propTypes = {
-  children: PropTypes.oneOfType([
-    PropTypes.node,
-    PropTypes.arrayOf(PropTypes.node),
-  ]),
-  name: PropTypes.string,
-  className: PropTypes.string,
-};

@@ -1,11 +1,6 @@
 import Card from "../../components/Card";
-import {
-  InputGroup,
-  NumberInput,
-  Select,
-  TextInput,
-} from "../../components/inputs";
-import { FaSearch, FaPlusCircle, FaWindowClose } from "react-icons/fa";
+import { InputGroup, SearchTextInput } from "../../components/inputs";
+import { FaSpinner } from "react-icons/fa";
 import {
   Table,
   THead,
@@ -14,12 +9,101 @@ import {
   TRow,
   TCol,
 } from "../../components/table";
-import { DefaultButton } from "../../components/buttons";
-import { useState } from "react";
-import { PopUpContainer } from "../../components/popup";
+import { useEffect, useState } from "react";
+import {
+  Form,
+  useLoaderData,
+  useNavigation,
+  useSubmit,
+} from "react-router-dom";
+import clsx from "clsx";
+import PropTypes from "prop-types";
+import OverlaySpinner from "../../components/OverlaySpinner";
+
+function SearchForm({ totalData }) {
+  const { q } = useLoaderData();
+  const { state } = useNavigation();
+  const [isTyping, setIsTyping] = useState(false);
+  const submit = useSubmit();
+  let delay = null;
+
+  useEffect(() => {
+    state === "idle" && setIsTyping(false);
+  }, [state]);
+
+  // ฟังชั้นรับค้าที่เปลี่ยนแปลง
+  function handleChange(event) {
+    event.preventDefault();
+    // เรียกสปินเนอร์ในช่องค้นหา
+    setIsTyping(true);
+
+    const formData = new FormData(event.currentTarget.form);
+
+    // รอ 1 วิ เพื่อขอข้อมูลจาก api
+    if (delay) clearTimeout(delay);
+    delay = setTimeout(() => {
+      submit(formData, { method: "GET" });
+    }, 1000);
+  }
+
+  return (
+    <Card className="w-full md:w-9/12 lg:w-8/12 xl:w-6/12 p-3">
+      <div className="flex justify-between border-b-4 border-sky-300">
+        <div className="text-lg font-bold">ค้นหา</div>
+        <div>จำนวน {totalData} รายการ</div>
+      </div>
+      <div className="flex items-center justify-center my-3">
+        <InputGroup className="w-10/12">
+          <label htmlFor="q">คำค้นหา</label>
+          <Form
+            className="flex items-center justify-center gap-3 w-full border border-gray-600 px-3 py-1 rounded focus-within:outline outline-2 -outline-offset-1 outline-black"
+            autoComplete="off"
+          >
+            <SearchTextInput
+              className="peer w-full"
+              name="q"
+              placeholder="พิมพ์ปีการศึกษาที่ต้องการค้นหา"
+              onChange={handleChange}
+              defaultValue={q}
+            />
+            <FaSpinner
+              className={clsx("animate-spin w-4 h-4", { hidden: !isTyping })}
+            />
+          </Form>
+        </InputGroup>
+      </div>
+    </Card>
+  );
+}
+
+function Row({ data, index }) {
+  return (
+    <TRow className="text-center">
+      <TCol>{index + 1}</TCol>
+      <TCol className="text-start font-bold px-2">{data.full_name}</TCol>
+      <TCol className="text-start px-2">{data.short_name}</TCol>
+      <TCol className="text-start px-2">{data.form}</TCol>
+      <TCol></TCol>
+      <TCol></TCol>
+      <TCol>{data.logo === "" ? "ไม่ใช้โลโก้" : "ใช้โลโก้"}</TCol>
+      <TCol></TCol>
+    </TRow>
+  );
+}
 
 export default function ReceiptType() {
-  const [isShowPopUp, setIsShowPopUp] = useState(false);
+  const { data } = useLoaderData();
+  /* const [isShowPopUp, setIsShowPopUp] = useState(false); */
+  // ตรวจสอบสถานะ loading
+  // ตรวจสอบสถานะ page loading
+  const { state } = useNavigation();
+  // const [cookies] = useCookies("title");
+  const [isLoading, setIsLoading] = useState(state !== "idle");
+
+  // ปรับสถานะ loading ของ page
+  useEffect(() => {
+    setIsLoading(state !== "idle");
+  }, [state]);
 
   return (
     <div className="p-1 md:p-6">
@@ -32,31 +116,11 @@ export default function ReceiptType() {
         </div>
 
         {/* ส่วนค้นหาข้อมูล */}
-        <Card className="w-full md:w-9/12 lg:w-8/12 xl:w-6/12 p-3">
-          <div className="flex justify-between border-b-4 border-sky-300">
-            <div className="text-lg font-bold">ค้นหา</div>
-            <div>จำนวน 0 รายการ</div>
-          </div>
-          <div className="flex items-center justify-center my-3">
-            <InputGroup className="w-10/12">
-              <label htmlFor="search">คำค้นหา</label>
-              <div className="flex items-center justify-center gap-3 w-full">
-                <TextInput
-                  className="w-full"
-                  name="search"
-                  placeholder="พิมพ์ประเภทใบเสร็จที่ต้องการค้นหา"
-                />
-                <button className="bg-sky-600 hover:bg-sky-500 text-white rounded-full p-2">
-                  <FaSearch className="w-4 h-4" />
-                </button>
-              </div>
-            </InputGroup>
-          </div>
-        </Card>
+        <SearchForm totalData={data.length} />
       </div>
 
       {/* ปุ่มรายการ */}
-      <div className="mt-10 mb-3">
+      {/* <div className="mt-10 mb-3">
         <DefaultButton
           className="bg-teal-600 hover:bg-teal-500 text-white"
           onClick={() => {
@@ -66,7 +130,7 @@ export default function ReceiptType() {
           <FaPlusCircle className="w-6 h-6" />
           <div className="font-bold">เพิ่ม</div>
         </DefaultButton>
-      </div>
+      </div> */}
 
       {/* ตารางแสดงข้อมูล */}
       <div className="overflow-auto">
@@ -77,28 +141,31 @@ export default function ReceiptType() {
               <THeadCol>ประเภทใบเสร็จ</THeadCol>
               <THeadCol>ชื่อย่อ</THeadCol>
               <THeadCol>แบบฟอร์ม</THeadCol>
+              <THeadCol>ชื่อรายงาน</THeadCol>
               <THeadCol>ขนาดกระดาษ</THeadCol>
               <THeadCol>โลโก้</THeadCol>
               <THeadCol>แนวกระดาษ</THeadCol>
             </THeadRow>
           </THead>
           <tbody>
-            <TRow className="text-center" index={0}>
-              <TCol>2</TCol>
-              <TCol className="font-bold">2562</TCol>
-              <TCol className="w-24"></TCol>
-              <TCol className="w-24"></TCol>
-              <TCol className="w-24"></TCol>
-              <TCol className="w-24"></TCol>
-              <TCol className="w-24"></TCol>
-            </TRow>
+            {!data || data.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="text-center p-3">
+                  - ไม่พบรายการ -
+                </td>
+              </tr>
+            ) : (
+              data.map((value, index) => (
+                <Row data={value} index={index} key={index} />
+              ))
+            )}
           </tbody>
         </Table>
       </div>
 
       {/* Pop up */}
-      {isShowPopUp && (
-        <PopUpContainer>
+      {/*  {isShowPopUp && (
+        <PopupContainer>
           <Card
             className="bg-white w-11/12 sm:w-9/12 md:w-6/12 lg:w-4/12 xl:w-3/12 p-3"
             style={{ marginTop: window.scrollY + window.innerHeight / 7 }}
@@ -160,8 +227,11 @@ export default function ReceiptType() {
               </div>
             </div>
           </Card>
-        </PopUpContainer>
-      )}
+        </PopupContainer>
+      )} */}
+
+      {/* แสดงสถานะโหลด */}
+      {isLoading && <OverlaySpinner />}
     </div>
   );
 }

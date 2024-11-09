@@ -12,6 +12,7 @@ import {
   FaTrashAlt,
   FaPlusCircle,
   FaWindowClose,
+  FaSpinner,
 } from "react-icons/fa";
 import {
   Table,
@@ -24,11 +25,24 @@ import {
 import { DefaultButton } from "../../components/buttons";
 import { useEffect, useState } from "react";
 import { PopupContainer } from "../../components/popup";
-import { useLoaderData } from "react-router-dom";
+import {
+  Form,
+  useActionData,
+  useFetcher,
+  useFetchers,
+  useLoaderData,
+  useNavigate,
+  useNavigation,
+  useSubmit,
+} from "react-router-dom";
 import { numberWithCommas, removeCommas } from "../../components/API";
+import { apiPath, user } from "../config";
+import OverlaySpinner from "../../components/OverlaySpinner";
 
 /* pop up component */
 const AddDetail = (props) => {
+  const fetcherAddPaymetDetail = useFetcher({ key: "payment-detail" });
+
   const handleChange = (event) => {
     const target = event.target;
     props.setAddDetail((prev) => ({ ...prev, [target.name]: target.value }));
@@ -37,36 +51,36 @@ const AddDetail = (props) => {
   return (
     <div className="flex flex-col gap-1 p-3 rounded bg-gray-100 w-full">
       <InputGroup className="w-full">
-        <label className="text-sm" htmlFor={"payments"}>
+        <label className="text-sm" htmlFor="paymentList">
           รายการชำระ
         </label>
         <ControlledSelect
-          name={"payments"}
+          name="paymentList"
           optionTexts={[...props.arrayPayments]}
-          value={props.payments}
+          value={props.paymentList}
           onChange={handleChange}
         />
       </InputGroup>
       <div className="flex gap-3 w-full">
         <InputGroup className="w-full">
-          <label className="text-sm" htmlFor={"unit"}>
+          <label className="text-sm" htmlFor="unit">
             จำนวน (หน่วย)
           </label>
           <ControlledNumberInput
             className="w-full"
-            name={"unit"}
+            name="unit"
             value={props.unit}
             onClick={(event) => event.currentTarget.select()}
             onChange={handleChange}
           />
         </InputGroup>
         <InputGroup className="w-full">
-          <label className="text-sm" htmlFor={"pricePerUnit"}>
+          <label className="text-sm" htmlFor="pricePerUnit">
             หน่วยละ (บาท)
           </label>
           <ControlledNumberInput
             className="w-full"
-            name={"pricePerUnit"}
+            name="pricePerUnit"
             value={props.pricePerUnit}
             onClick={(event) => event.currentTarget.select()}
             onChange={handleChange}
@@ -76,28 +90,42 @@ const AddDetail = (props) => {
       <div className="flex justify-between">
         <DefaultButton
           className="flex flex-row bg-red-600 hover:bg-red-500 text-white mt-3"
-          onClick={props.handleDelete}
+          onClick={() => props.handleDelete(props)}
         >
           <FaTrashAlt className="w-6 h-6" />
           <div className="font-bold">ลบ</div>
         </DefaultButton>
-        {props.action === "create" && (
+        {(props.action === "update1" ||
+          props.action === "create1" ||
+          props.action === "create2") && (
           <DefaultButton
-            className="flex flex-row bg-teal-600 hover:bg-teal-500 text-white mt-3"
+            className="flex flex-row gap-3 bg-teal-600 hover:bg-teal-500 text-white mt-3"
             onClick={props.handleAddItem}
           >
-            <FaPlusCircle className="w-6 h-6" />
-            <div className="font-bold">เพิ่ม</div>
+            {fetcherAddPaymetDetail.state !== "idle" && (
+              <FaSpinner className="animate-spin" />
+            )}
+            <div className="flex gap-1 font-bold">
+              <FaPlusCircle className="w-6 h-6" />
+              เพิ่ม
+            </div>
           </DefaultButton>
         )}
-        {props.action === "update" && (
-          <DefaultButton
-            className="flex flex-row bg-yellow-600 hover:bg-yellow-500 text-white mt-3"
-            onClick={() => props.handleEditItem(props)}
-          >
-            <FaEdit className="w-6 h-6" />
-            <div className="font-bold">แก้ไข</div>
-          </DefaultButton>
+        {["update2"].includes(props.action) && (
+          <div className="flex gap-3">
+            <DefaultButton
+              className="flex flex-row bg-yellow-600 hover:bg-yellow-500 text-white mt-3"
+              onClick={() => props.handleUpdateItem(props)}
+            >
+              <div className="font-bold">บันทึก</div>
+            </DefaultButton>
+            <DefaultButton
+              className="flex flex-row bg-red-600 hover:bg-red-500 text-white mt-3"
+              onClick={() => props.handleCancelUpdate()}
+            >
+              <div className="font-bold">ยกเลิก</div>
+            </DefaultButton>
+          </div>
         )}
       </div>
     </div>
@@ -114,13 +142,6 @@ const PopupRow = (props) => {
         popupCheckAll.checked = false;
       }
     }
-
-    // เก็บค่า id ของ item ที่เลือก
-    if (event.target.checked) {
-      props.setSelectedId((prev) => [...prev, props.id]);
-    } else {
-      props.setSelectedId(props.selectedId.filter((id) => id !== props.id));
-    }
   };
 
   return (
@@ -130,11 +151,10 @@ const PopupRow = (props) => {
           type="checkbox"
           name={`popupCheckbox#${props.id}`}
           onChange={handleChecked}
+          value={props.id}
         />
       </TCol>
-      <TCol className="text-start px-2">
-        {numberWithCommas(props.payments)}
-      </TCol>
+      <TCol className="text-start px-2">{props.paymentList}</TCol>
       <TCol className="text-end px-2">
         {numberWithCommas(parseFloat(props.unit).toFixed(2))}
       </TCol>
@@ -152,7 +172,7 @@ const PopupRow = (props) => {
       <TCol>
         <DefaultButton
           className="mx-auto"
-          onClick={() => props.handleToEdit(props)}
+          onClick={() => props.handleGetItemUpdate(props)}
         >
           <FaEdit className="w-5 h-5 text-yellow-600" />
         </DefaultButton>
@@ -162,119 +182,355 @@ const PopupRow = (props) => {
 };
 
 const Popup = (props) => {
+  const submit = useSubmit();
+  const fetchers = useFetchers();
+  const fetcherLoadItemForUpdate = fetchers.filter(
+    (element) => element.key === "load-items-update"
+  )[0];
+  const fetcherAddPaymetDetail = useFetcher({ key: "payment-detail" });
+  const fetcherLoadItem = useFetcher({ key: "load-items" });
+  //-----------------------------------------------------------------------------------------------
+  // ทบทวนลบ
+  //-----------------------------------------------------------------------------------------------
+  const [values, setValues] = useState(props.values);
   const [paymentInfo, setPaymentInfo] = useState({
-    semester: 1,
-    academicYear:
-      props.arrayAcademicYear.length > 0 ? props.arrayAcademicYear[0] : [],
-    receiptType: "ใบเสร็จรับเงิน สพฐ.",
-    studentType:
-      props.arrayStudentType.length > 0 ? props.arrayStudentType[0] : [],
+    semester: props.values.semester,
+    academicYear: props.values.academicYear,
+    receiptType: props.values.receiptType,
+    studentType: props.values.studentType,
   });
-  // ตัวเก็บข้อมูลสำหรับบันทึกใน database
-  const [items, setItems] = useState([]);
-  // ไว้อ้างอิงตอนแก้ไข
-  const [counter, setCounter] = useState(1);
+
   // ตัวเก็บข้อมูลเพื่อส่งต่อไปยัง items ด้วย handleAddItem function
   const [addDetail, setAddDetail] = useState({
-    action: "create",
-    id: counter,
-    payments: props.arrayPayments[0],
+    action: values.action,
+    paymentList: props.arrayPayments[0],
     unit: "0",
     pricePerUnit: "0",
+    id: -1,
   });
-  // เก็บค่า id ที่ต้องการลบเป็น array
-  const [selectedId, setSelectedId] = useState([]);
-
+  // รวมมูลค่าแต่ละ field
+  const [total, setTotal] = useState({
+    unit: 0,
+    pricePerUnit: 0,
+    total: 0,
+  });
+  // update items เมื่อทำการเพิ่ม item ไปยัง database
   useEffect(() => {
-    // ล้างค่า addDetail และเพิ่ม id
-    setAddDetail({
-      action: "create",
-      id: counter,
-      payments: props.arrayPayments[0],
-      unit: "0",
-      pricePerUnit: "0",
+    if (
+      fetcherLoadItem.state === "idle" &&
+      fetcherLoadItem.data &&
+      values.action === "update1"
+    ) {
+      // ตรวจสอบข้อมูลอัพเดต
+      if (
+        fetcherLoadItem.data.data.filter((element, index) => {
+          if (props.items[index]) {
+            return (
+              element.id != props.items[index].id ||
+              element.payment_list != props.items[index].paymentList ||
+              element.price_per_unit != props.items[index].pricePerUnit ||
+              element.unit != props.items[index].unit
+            );
+          } else {
+            return element;
+          }
+        }).length > 0
+      ) {
+        props.setItems(
+          fetcherLoadItem.data.data.map((element) => ({
+            id: element.id,
+            paymentList: element.payment_list,
+            unit: element.unit,
+            pricePerUnit: element.price_per_unit,
+          }))
+        );
+      }
+    }
+  }, [fetcherLoadItem, props.setItems, props.items]);
+
+  // update items เมื่อกดปุ่มแก้ไข
+  useEffect(() => {
+    if (fetcherLoadItemForUpdate) {
+      if (fetcherLoadItemForUpdate.state !== "idle") props.setIsLoading(true);
+      if (fetcherLoadItemForUpdate.state === "idle") props.setIsLoading(false);
+      if (
+        fetcherLoadItemForUpdate.state === "idle" &&
+        fetcherLoadItemForUpdate.data &&
+        values.action === "create2"
+      ) {
+        // ปรับเป็นโหมดสร้าง
+        setValues((prev) => ({ ...prev, action: "update1" }));
+        if (
+          fetcherLoadItemForUpdate.data.data.filter((element, index) => {
+            if (props.items[index]) {
+              return (
+                element.id != props.items[index].id ||
+                element.payment_list != props.items[index].paymentList ||
+                element.price_per_unit != props.items[index].pricePerUnit ||
+                element.unit != props.items[index].unit
+              );
+            } else {
+              return element;
+            }
+          }).length > 0
+        ) {
+          props.setItems(
+            fetcherLoadItemForUpdate.data.data.map((element) => ({
+              id: element.id,
+              paymentList: element.payment_list,
+              unit: element.unit,
+              pricePerUnit: element.price_per_unit,
+            }))
+          );
+        }
+      }
+    }
+  }, [fetcherLoadItemForUpdate]);
+
+  // คำนวณ total
+  useEffect(() => {
+    setTotal({
+      unit:
+        props.items && props.items.length > 0
+          ? parseFloat(
+              props.items
+                .map((element) => parseFloat(element.unit))
+                .reduce((prev, curr) => prev + curr)
+            ).toFixed(2)
+          : 0,
+      pricePerUnit:
+        props.items && props.items.length > 0
+          ? parseFloat(
+              props.items
+                .map((element) => parseFloat(element.pricePerUnit))
+                .reduce((prev, curr) => prev + curr)
+            ).toFixed(2)
+          : 0,
+      total:
+        props.items && props.items.length > 0
+          ? parseFloat(
+              props.items
+                .map(
+                  (element) =>
+                    parseFloat(element.pricePerUnit) * parseFloat(element.unit)
+                )
+                .reduce((prev, curr) => prev + curr)
+            ).toFixed(2)
+          : 0,
     });
-  }, [counter]);
+  }, [props.items]);
+
+  // unlock ขั้นที่ 1 ถ้าสำเร็จ
+  useEffect(() => {
+    if (
+      fetcherAddPaymetDetail.state === "idle" &&
+      fetcherAddPaymetDetail.data
+    ) {
+      if (
+        fetcherAddPaymetDetail.data.status === 200 &&
+        fetcherAddPaymetDetail.data.message === "step 1"
+      ) {
+        props.setPaymentID(fetcherAddPaymetDetail.data.paymentID);
+        setValues((prev) => ({ ...prev, action: "update1" }));
+      }
+    }
+  }, [fetcherAddPaymetDetail]);
 
   const handlePaymentInfoChange = (event) => {
     const target = event.target;
     setPaymentInfo((prev) => ({ ...prev, [target.name]: target.value }));
   };
 
-  // เพื่อข้อมูลจาก addDetail ไปยัง items
-  const handleAddItem = () => {
-    setItems((prev) => [
-      ...prev,
-      {
-        id: addDetail.id,
-        payments: addDetail.payments,
-        unit: addDetail.unit,
-        pricePerUnit: addDetail.pricePerUnit,
-      },
-    ]);
-
-    setCounter(counter + 1);
-  };
-
-  // รับ trigger มาจาก PopupRow
-  // ปรับ AddItem เป็นโหมด update
-  const handleToEdit = (props) => {
-    setAddDetail({
-      action: "update",
-      id: props.id,
-      payments: props.payments,
-      unit: props.unit,
-      pricePerUnit: props.pricePerUnit,
-    });
-  };
-
-  const handleEditItem = (props) => {
-    setItems(
-      items.map((element) => {
-        if (element.id === props.id) {
-          return {
-            id: element.id,
-            payments: addDetail.payments,
-            unit: addDetail.unit,
-            pricePerUnit: addDetail.pricePerUnit,
-          };
-        } else {
-          return element;
-        }
-      })
+  // เพิ่มข้อมูลไปยังฐานข้อมูลทีละตัว
+  const handleAddItem = async () => {
+    const formData = new FormData();
+    // ข้อมูล item
+    formData.append("paymentList", addDetail.paymentList);
+    formData.append("unit", addDetail.unit);
+    formData.append("pricePerUnit", addDetail.pricePerUnit);
+    formData.append(
+      "total",
+      (parseFloat(addDetail.pricePerUnit) * parseFloat(addDetail.unit)).toFixed(
+        2
+      )
     );
+    formData.append("id", props.paymentID);
+    // อื่น ๆ
+    formData.append("creator", user);
+    formData.append("action", "addItem");
 
+    fetcherAddPaymetDetail.submit(formData, {
+      method: "POST",
+    });
+    // ล้างค่า
     setAddDetail({
-      action: "create",
-      id: counter,
-      payments: props.arrayPayments[0],
+      action: "create1",
+      paymentList: props.arrayPayments[0],
       unit: "0",
       pricePerUnit: "0",
     });
+
+    fetcherLoadItem.load(
+      `/payment-detail?action=load-item&id=${props.paymentID}`
+    );
   };
 
   // ลบรายการ
-  const handleDelete = () => {
+  const handleDelete = (props) => {
+    // กล่อง check all ใน pop up
+    const popupCheckAll = document.querySelector('[name="popupCheckAll"]');
+    // กล่อง checkbox ใน pop up
     const allCheckbox = document.querySelectorAll('[name^="popupCheckbox#"]');
-    setItems(items.filter((element) => !selectedId.includes(element.id)));
-    allCheckbox.forEach((element) => (element.checked = false));
-    setSelectedId([]);
+    // ให้กล่อง checkbox ทั้งหมดแสดงผลเป็นว่างเปล่า
+    const array_selectedID = [];
+    allCheckbox.forEach((element) => {
+      if (element.checked) array_selectedID.push(element.value);
+    });
+
+    if (array_selectedID.length === 0) {
+      alert("ยังไม่ได้เลือกรายการที่ต้องการลบ");
+      return;
+    }
+
+    const cf = confirm("ยืนยันการลบรายการที่เลือก");
+    if (!cf) return;
+
+    const formData = new FormData();
+    formData.append("action", "deleteItems");
+    formData.append("creator", user);
+    formData.append("paymentID", props.paymentID);
+    formData.append("id", JSON.stringify(array_selectedID));
+
+    submit(formData, {
+      method: "POST",
+    });
+
+    // กล่อง check all แสดงผลว่างเปล่า
+    popupCheckAll.checked = false;
+    // reload fetcherLoadItem
+    fetcherLoadItem.load(
+      `/payment-detail?action=load-item&id=${props.paymentID}`
+    );
   };
 
   // check all checkbox
-  const handleCheckAll = (event) => {
+  const handleCheckAll = () => {
+    // กล่อง check all ใน pop up
+    const popupCheckAll = document.querySelector('[name="popupCheckAll"]');
+    // กล่อง check all ใน pop up
     const allPopupCheckbox = document.querySelectorAll(
       '[name^="popupCheckbox#"]'
     );
 
-    allPopupCheckbox.forEach((element) => {
-      element.checked = event.target.checked;
+    allPopupCheckbox.forEach(
+      (element) => (element.checked = popupCheckAll.checked)
+    );
+  };
+
+  // บันทึกข้อมูลขั้นที่ 1
+  const handleSubmitFirstStep = () => {
+    const formData = new FormData();
+    // payment information
+    formData.append("id", values.id);
+    formData.append("semester", paymentInfo.semester);
+
+    formData.append("academicYear", paymentInfo.academicYear);
+    formData.append("receiptType", paymentInfo.receiptType);
+    formData.append("studentType", paymentInfo.studentType);
+    // items
+    formData.append("creator", user);
+    formData.append("action", "createStepOne");
+
+    fetcherAddPaymetDetail.submit(formData, {
+      method: "POST",
+    });
+
+    props.setItems([]);
+  };
+
+  const handleSubmitSecondStep = () => {
+    const formData = new FormData();
+
+    // payment information
+    formData.append("id", props.paymentID);
+    formData.append("semester", paymentInfo.semester);
+
+    formData.append("academicYear", paymentInfo.academicYear);
+    formData.append("receiptType", paymentInfo.receiptType);
+    formData.append("studentType", paymentInfo.studentType);
+    // items
+    formData.append("creator", user);
+    formData.append("action", "updateStepOne");
+
+    submit(formData, {
+      method: "POST",
+    });
+
+    props.setIsShowPopUp(false);
+  };
+
+  // หยิบข้อมูลใน pop up item ไปอัพเดต
+  const handleGetItemUpdate = (props) => {
+    setAddDetail({
+      action: "update2",
+      paymentList: props.paymentList,
+      unit: props.unit,
+      pricePerUnit: props.pricePerUnit,
+      id: props.id,
     });
   };
 
-  const handleSubmit = () => {
+  // อัพเดตข้อมูล item ใน database
+  const handleUpdateItem = (props) => {
     const formData = new FormData();
-    formData.append("action", "create");
+
+    // ข้อมูล item
+    formData.append("itemID", props.id);
+    formData.append("paymentList", props.paymentList);
+    formData.append("unit", props.unit);
+    formData.append("pricePerUnit", props.pricePerUnit);
+    formData.append(
+      "itemTotal",
+      (parseFloat(props.pricePerUnit) * parseFloat(props.unit)).toFixed(2)
+    );
+
+    // ข้อมูลใบเสร็จ
+    formData.append("paymentID", props.paymentID);
+    formData.append("semester", paymentInfo.semester);
+    formData.append("academicYear", paymentInfo.academicYear);
+    formData.append("receiptType", paymentInfo.receiptType);
+    formData.append("studentType", paymentInfo.studentType);
+
+    // ข้อมูลอื่น ๆ
+    formData.append("creator", user);
+    formData.append("action", "updateItem");
+
+    submit(formData, {
+      method: "POST",
+    });
+
+    // ล้างค่า
+    setAddDetail({
+      action: "create1",
+      paymentList: props.arrayPayments[0],
+      unit: "0",
+      pricePerUnit: "0",
+    });
+
+    fetcherLoadItem.load(
+      `/payment-detail?action=load-item&id=${props.paymentID}`
+    );
+  };
+
+  // ยกเลิกการอัพเดต
+  const handleCancelUpdate = () => {
+    setAddDetail({
+      action: "create2",
+      paymentList: props.arrayPayments[0],
+      unit: "0",
+      pricePerUnit: "0",
+      id: -1,
+    });
   };
 
   return (
@@ -336,80 +592,148 @@ const Popup = (props) => {
               onChange={handlePaymentInfoChange}
             />
           </InputGroup>
-          <div className="border border-gray-300 w-full p-3 rounded mt-6">
-            <div className="text-xl font-bold">กำหนดรายละเอียดการชำระเงิน</div>
-            <hr className="border-b-4 border-sky-300" />
-
-            <div className="flex flex-col gap-1">
-              {/* แบบฟอร์ม Add detail */}
-              <AddDetail
-                {...{
-                  ...addDetail,
-                  setAddDetail,
-                  handleAddItem,
-                  handleEditItem,
-                  handleDelete,
-                  arrayPayments: props.arrayPayments,
+          {values.action === "create1" && (
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 self-end">
+              <DefaultButton
+                className="flex gap-3 bg-teal-600 hover:bg-teal-500 text-white font-bold"
+                onClick={handleSubmitFirstStep}
+              >
+                {fetcherAddPaymetDetail.state !== "idle" && (
+                  <FaSpinner className="animate-spin" />
+                )}
+                บันทึก
+              </DefaultButton>
+              <DefaultButton
+                className="bg-red-600 hover:bg-red-500 text-white font-bold"
+                onClick={() => {
+                  props.setIsShowPopUp(false);
+                  props.setItems([]);
                 }}
-              />
-              {/* ตารางแสดงข้อมูล */}
-              <div className="overflow-auto">
-                <Table>
-                  <THead>
-                    <THeadRow>
-                      <THeadCol>
-                        <input
-                          type="checkbox"
-                          name="popupCheckAll"
-                          onChange={handleCheckAll}
-                        />
-                      </THeadCol>
-                      <THeadCol className="min-w-56">ชื่อรายการชำระ</THeadCol>
-                      <THeadCol>จำนวน</THeadCol>
-                      <THeadCol>หน่วยละ</THeadCol>
-                      <THeadCol>จำนวนเงิน</THeadCol>
-                      <THeadCol>แก้ไช</THeadCol>
-                    </THeadRow>
-                  </THead>
-                  <tbody>
-                    {items.length === 0 && (
-                      <tr>
-                        <td className="text-center py-3" colSpan={6}>
-                          - ไม่พบรายการ -
-                        </td>
-                      </tr>
-                    )}
-                    {items &&
-                      items.map((element, index) => (
-                        <PopupRow
-                          {...{
-                            ...element,
-                            handleToEdit,
-                            selectedId,
-                            setSelectedId,
-                          }}
-                          key={index}
-                        />
-                      ))}
-                  </tbody>
-                </Table>
-              </div>
+              >
+                ยกเลิก
+              </DefaultButton>
             </div>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 self-end">
-            <DefaultButton
-              className="bg-teal-600 hover:bg-teal-500 text-white font-bold"
-              onClick={handleSubmit}
-            >
-              บันทึก
-            </DefaultButton>
-            <DefaultButton
-              className="bg-red-600 hover:bg-red-500 text-white font-bold"
-              onClick={() => props.setIsShowPopUp(false)}
-            >
-              ยกเลิก
-            </DefaultButton>
-          </div>
+          )}
+          {/* เพิ่มรายละเอียด */}
+          {["create2", "update1", "update2"].includes(values.action) && (
+            <>
+              <div className="border border-gray-300 w-full p-3 rounded mt-6">
+                <div className="text-xl font-bold">
+                  กำหนดรายละเอียดการชำระเงิน
+                </div>
+                <hr className="border-b-4 border-sky-300" />
+
+                <div className="flex flex-col gap-1">
+                  {/* แบบฟอร์ม Add detail */}
+                  <AddDetail
+                    {...{
+                      ...addDetail,
+                      setAddDetail,
+                      paymentID: props.paymentID,
+                      handleAddItem,
+                      handleUpdateItem,
+                      handleDelete,
+                      handleCancelUpdate,
+                      arrayPayments: props.arrayPayments,
+                    }}
+                  />
+                  {/* ตารางแสดงข้อมูล */}
+                  <div className="overflow-auto">
+                    <Table>
+                      <THead>
+                        <THeadRow>
+                          <THeadCol>
+                            <input
+                              type="checkbox"
+                              name="popupCheckAll"
+                              onChange={handleCheckAll}
+                            />
+                          </THeadCol>
+                          <THeadCol className="min-w-56">
+                            ชื่อรายการชำระ
+                          </THeadCol>
+                          <THeadCol>จำนวน</THeadCol>
+                          <THeadCol>หน่วยละ</THeadCol>
+                          <THeadCol>จำนวนเงิน</THeadCol>
+                          <THeadCol>แก้ไข</THeadCol>
+                        </THeadRow>
+                      </THead>
+                      <tbody>
+                        {props.items &&
+                          fetcherLoadItem.state === "idle" &&
+                          props.items.length === 0 && (
+                            <tr>
+                              <td className="text-center py-3" colSpan={6}>
+                                - ไม่พบรายการ -
+                              </td>
+                            </tr>
+                          )}
+                        {props.items && fetcherLoadItem.state !== "idle" && (
+                          <tr>
+                            <td className="text-center py-3" colSpan={6}>
+                              - กำลังโหลดรายการ -
+                            </td>
+                          </tr>
+                        )}
+                        {props.items &&
+                          fetcherLoadItem.state === "idle" &&
+                          props.items.map((element, index) => (
+                            <PopupRow
+                              {...{
+                                ...element,
+                                handleGetItemUpdate,
+                              }}
+                              key={index}
+                            />
+                          ))}
+                        {props.items &&
+                          fetcherLoadItem.state === "idle" &&
+                          total &&
+                          props.items.length > 0 && (
+                            <TRow>
+                              <TCol
+                                className="text-center font-bold px-2"
+                                colSpan={2}
+                              >
+                                รวม
+                              </TCol>
+                              <TCol className="text-end px-2">
+                                {numberWithCommas(total.unit)}
+                              </TCol>
+                              <TCol className="text-end px-2">
+                                {numberWithCommas(total.pricePerUnit)}
+                              </TCol>
+                              <TCol className="text-end px-2">
+                                {numberWithCommas(total.total)}
+                              </TCol>
+                              <TCol></TCol>
+                            </TRow>
+                          )}
+                      </tbody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
+              {/* ปุ่ม */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 self-end">
+                <DefaultButton
+                  className="bg-teal-600 hover:bg-teal-500 text-white font-bold"
+                  onClick={handleSubmitSecondStep}
+                >
+                  บันทึก
+                </DefaultButton>
+                <DefaultButton
+                  className="bg-red-600 hover:bg-red-500 text-white font-bold"
+                  onClick={() => {
+                    props.setItems([]);
+                    props.setIsShowPopUp(false);
+                  }}
+                >
+                  ยกเลิก
+                </DefaultButton>
+              </div>
+            </>
+          )}
         </div>
       </Card>
     </PopupContainer>
@@ -417,35 +741,75 @@ const Popup = (props) => {
 };
 
 const Row = (props) => {
+  const submit = useSubmit();
+  // ลบรายการ
+  const handleDeleteById = (id) => {
+    const formData = new FormData();
+    formData.append("action", "delete");
+    formData.append("id", id);
+
+    submit(formData, {
+      method: "POST",
+    });
+  };
+
+  const handleChecked = () => {
+    const checkAllCheckbox = document.querySelector('[name="checkAll"]');
+    const thisCheckbox = document.querySelectorAll('[name^="checkbox#"]');
+
+    if (checkAllCheckbox.checked) {
+      !thisCheckbox.checked && (checkAllCheckbox.checked = false);
+    }
+  };
+
   return (
     <TRow className="text-center">
       <TCol className="px-2">
-        <input type="checkbox" name="check1" id="check1" />
+        <input
+          type="checkbox"
+          name={`checkbox#${props.index}`}
+          value={props.id}
+          onChange={handleChecked}
+        />
       </TCol>
       <TCol className="px-2">{props.index + 1}</TCol>
-      <TCol className="px-2">2</TCol>
-      <TCol className="px-2">2567</TCol>
-      <TCol className="text-start font-bold px-2">ห้องเรียนชั้น ม.2,3,5,6</TCol>
-      <TCol className="px-2">ใบเสร็จรับเงิน สพฐ.</TCol>
-      <TCol className="px-2">470.00</TCol>
-      <TCol className="px-2">
-        <button className="flex items-center justify-center mx-auto">
-          <FaEdit className="w-5 h-5 text-yellow-600" />
-        </button>
+      <TCol className="px-2">{props.semester}</TCol>
+      <TCol className="px-2">{props.academic_year}</TCol>
+      <TCol className="text-start font-bold px-2">{props.student_type}</TCol>
+      <TCol className="px-2">{props.receipt_type}</TCol>
+      <TCol className="px-2 text-end">
+        {numberWithCommas(parseFloat(props.payment).toFixed(2))}
       </TCol>
       <TCol className="px-2">
-        <button className="flex items-center justify-center mx-auto">
+        <DefaultButton
+          className="flex items-center justify-center mx-auto"
+          onClick={() => props.handleGetItemById(props)}
+        >
+          <FaEdit className="w-5 h-5 text-yellow-600" />
+        </DefaultButton>
+      </TCol>
+      <TCol className="px-2">
+        <DefaultButton
+          className="flex items-center justify-center mx-auto"
+          onClick={() => handleDeleteById(props.id)}
+        >
           <FaTrashAlt className="w-5 h-5 text-red-600" />
-        </button>
+        </DefaultButton>
       </TCol>
     </TRow>
   );
 };
 
 export default function PaymentDetail() {
+  const submit = useSubmit();
+  const fetcherLoadItemForUpdate = useFetcher({ key: "load-items-update" });
   const { payment_detail, student_type, academic_year, payments } =
     useLoaderData();
+  const { state } = useNavigation();
   const [isShowPopUp, setIsShowPopUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  // รับค่า id ของขั้นที่ 1
+  const [paymentID, setPaymentID] = useState("0");
 
   const arrayStudentType =
     student_type && student_type.length > 0
@@ -462,11 +826,126 @@ export default function PaymentDetail() {
       ? Array.from(payments.map((element) => element.payment_list))
       : [];
 
+  // ค่า default ของ input ใน pop up
+  const [values, setValues] = useState({
+    action: "create1",
+    id: -1,
+    semester: "1",
+    academicYear: arrayAcademicYear[0],
+    receiptType: "ใบเสร็จรับเงิน สพฐ.",
+    studentType: arrayStudentType[0],
+    payments: payments[0],
+    unit: "0",
+    pricePerUnit: "0",
+  });
+  // ตัวเก็บข้อมูลสำหรับบันทึกใน database
+  const [items, setItems] = useState([]);
+
+  // แสดง loading
+  useEffect(() => {
+    if (state === "idle") setIsLoading(false);
+    if (state !== "idle") setIsLoading(true);
+  }, [state]);
+
+  // เลือก payment เพื่อไปแก้ไข
+  const handleGetItemById = (props) => {
+    fetcherLoadItemForUpdate.load(
+      `/payment-detail?action=load-item&id=${props.id}`
+    );
+
+    setValues((prev) => ({
+      ...prev,
+      id: props.id,
+      action: "create2",
+      semester: props.semester,
+      academicYear: props.academic_year,
+      receiptType: props.receipt_type,
+      studentType: props.student_type,
+    }));
+
+    setPaymentID(props.id);
+    setIsShowPopUp(true);
+  };
+
+  const handleTogglePopup = (action) => {
+    if (action === "add") {
+      setValues({
+        action: "create1",
+        semester: "1",
+        academicYear: arrayAcademicYear[0],
+        receiptType: "ใบเสร็จรับเงิน สพฐ.",
+        studentType: arrayStudentType[0],
+        payments: payments[0],
+        unit: "0",
+        pricePerUnit: "0",
+      });
+      setIsShowPopUp(true);
+    }
+  };
+
+  const handleCheckAll = () => {
+    const checkAllCheckbox = document.querySelector('[name="checkAll"]');
+    const allCheckbox = document.querySelectorAll('[name^="checkbox#"]');
+
+    allCheckbox.forEach(
+      (element) => (element.checked = checkAllCheckbox.checked)
+    );
+  };
+
+  // ลบเป็นกลุ่ม
+  const handleDeletePaymentDetailByGroup = () => {
+    const allCheckbox = document.querySelectorAll('[name^="checkbox#"]');
+    const arraySelected = [];
+
+    allCheckbox.forEach((element) => {
+      element.checked && arraySelected.push(element.value);
+    });
+
+    if (arraySelected.length === 0) {
+      alert("ยังไม่ได้เลือกรายการที่ต้องการลบ");
+      return;
+    }
+
+    const cf = confirm("ยืนยันการลบรายการที่เลือก");
+
+    if (!cf) return;
+
+    const formData = new FormData();
+    formData.append("id", JSON.stringify(arraySelected));
+    formData.append("action", "deletePaymentDetailGroup");
+
+    submit(formData, {
+      method: "POST",
+    });
+
+    allCheckbox.forEach((element) => (element.checked = false));
+  };
+
+  const handleChange = (event) => {
+    const receiveForm = new FormData(event.target.form);
+    const sendForm = new FormData();
+    sendForm.append("s", receiveForm.get("searchSemester"));
+    sendForm.append("ay", receiveForm.get("searchAcademicYear"));
+    sendForm.append("rt", receiveForm.get("searchReceiptType"));
+    sendForm.append("st", receiveForm.get("searchStudentType"));
+
+    submit(sendForm, {
+      method: "GET",
+    });
+  };
+
+  // props ของ popup
   const popupProps = {
+    values,
     arrayStudentType,
     arrayAcademicYear,
     arrayPayments,
     setIsShowPopUp,
+    items,
+    setItems,
+    setIsLoading,
+    paymentID,
+    setPaymentID,
   };
 
   return (
@@ -483,28 +962,36 @@ export default function PaymentDetail() {
         <Card className="w-full md:w-9/12 lg:w-8/12 xl:w-6/12 p-3">
           <div className="flex justify-between border-b-4 border-sky-300">
             <div className="text-lg font-bold">ค้นหา</div>
-            <div>จำนวน 0 รายการ</div>
+            <div>จำนวน {payment_detail.length} รายการ</div>
           </div>
-          <div className="flex flex-col gap-2 items-center justify-center my-3">
+          {/* filter */}
+          <Form
+            className="flex flex-col gap-2 items-center justify-center my-3"
+            role="search"
+          >
             <InputGroup className="w-10/12">
               <div className="flex">
-                <label htmlFor="searchSemister">เทอม</label>
+                <label htmlFor="searchSemester">เทอม</label>
                 <div className="px-2">/</div>
-                <label htmlFor="seachAcademicYear">ปีการศึกษา</label>
+                <label htmlFor="searchAcademicYear">ปีการศึกษา</label>
               </div>
               <div className="flex items-center gap-3 w-full">
                 <Select
                   className="w-full"
-                  name="searchSemister"
+                  name="searchSemester"
                   optionTexts={["ทั้งหมด", 1, 2]}
                   optionValues={["", 1, 2]}
+                  defaultValue=""
+                  onChange={handleChange}
                 />
                 <div>/</div>
                 <Select
                   className="w-full"
-                  name="seachAcademicYear"
+                  name="searchAcademicYear"
                   optionTexts={["ทั้งหมด", ...arrayAcademicYear]}
                   optionValues={["", ...arrayAcademicYear]}
+                  defaultValue=""
+                  onChange={handleChange}
                 />
               </div>
             </InputGroup>
@@ -513,8 +1000,9 @@ export default function PaymentDetail() {
               <Select
                 name="searchReceiptType"
                 optionTexts={["ทั้งหมด", "ใบเสร็จรับเงิน สพฐ."]}
-                optionValues={["0", "ใบเสร็จรับเงิน สพฐ."]}
+                optionValues={["", "ใบเสร็จรับเงิน สพฐ."]}
                 defaultValue="ใบเสร็จรับเงิน สพฐ."
+                onChange={handleChange}
               />
             </InputGroup>
             <InputGroup className="w-10/12">
@@ -523,6 +1011,8 @@ export default function PaymentDetail() {
                 name="searchStudentType"
                 optionTexts={["ทั้งหมด", ...arrayStudentType]}
                 optionValues={["", ...arrayStudentType]}
+                defaultValue=""
+                onChange={handleChange}
               />
             </InputGroup>
             {/* <InputGroup className="w-10/12">
@@ -538,7 +1028,7 @@ export default function PaymentDetail() {
                 </button>
               </div>
             </InputGroup> */}
-          </div>
+          </Form>
         </Card>
       </div>
 
@@ -546,14 +1036,15 @@ export default function PaymentDetail() {
       <div className="flex gap-1 mt-10 mb-3">
         <DefaultButton
           className="flex flex-row bg-teal-600 hover:bg-teal-500 text-white"
-          onClick={() => {
-            setIsShowPopUp(true);
-          }}
+          onClick={() => handleTogglePopup("add")}
         >
           <FaPlusCircle className="w-6 h-6" />
           <div className="font-bold  hidden sm:block">เพิ่ม</div>
         </DefaultButton>
-        <DefaultButton className="flex flex-row bg-red-600 hover:bg-red-500 text-white">
+        <DefaultButton
+          className="flex flex-row bg-red-600 hover:bg-red-500 text-white"
+          onClick={handleDeletePaymentDetailByGroup}
+        >
           <FaTrashAlt className="w-6 h-6" />
           <div className="font-bold  hidden sm:block">ลบ</div>
         </DefaultButton>
@@ -565,7 +1056,12 @@ export default function PaymentDetail() {
           <THead>
             <THeadRow>
               <THeadCol>
-                <input type="checkbox" name="checkAll" id="checkAll" />
+                <input
+                  type="checkbox"
+                  name="checkAll"
+                  id="checkAll"
+                  onChange={handleCheckAll}
+                />
               </THeadCol>
               <THeadCol>ที่</THeadCol>
               <THeadCol>เทอม</THeadCol>
@@ -578,15 +1074,32 @@ export default function PaymentDetail() {
             </THeadRow>
           </THead>
           <tbody>
-            {payment_detail.map((props, index) => (
-              <Row {...props} index key={index} />
-            ))}
+            {!payment_detail ||
+              (payment_detail.length === 0 && (
+                <tr>
+                  <td className="text-center p-3" colSpan={9}>
+                    - ไม่พบรายการ -
+                  </td>
+                </tr>
+              ))}
+            {payment_detail &&
+              payment_detail.length > 0 &&
+              payment_detail.map((props, index) => (
+                <Row
+                  {...props}
+                  {...{ index: index, handleGetItemById }}
+                  key={index}
+                />
+              ))}
           </tbody>
         </Table>
       </div>
 
       {/* Pop up */}
       {isShowPopUp && <Popup {...popupProps} />}
+
+      {/* show loading */}
+      {isLoading && <OverlaySpinner />}
     </div>
   );
 }

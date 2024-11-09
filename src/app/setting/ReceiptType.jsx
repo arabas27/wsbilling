@@ -109,7 +109,7 @@ export default function ReceiptType() {
     <div className="p-1 md:p-6">
       <div className="flex flex-col items-center gap-6 md:mx-16 py-6">
         {/* Title */}
-        <div className="w-full md:w-9/12 lg:w-6/12">
+        <div className="flex justify-center w-full md:w-9/12 lg:w-6/12">
           <div className="text-2xl font-bold bg-sky-600 text-white w-fit rounded p-3 my-6">
             ประเภทใบเสร็จ
           </div>

@@ -232,11 +232,84 @@ export async function paymentDetailAction({ request }) {
   // for (var p of formData.entries()) {
   //   console.log(p);
   // }
-
-  if (action === "create") {
-    // สร้างใบเสร็จ
+  if (action === "createStepOne") {
+    // สร้างขั้นที่ 1
     try {
-      await fetch(`${apiPath}/create/create-payments.php`, {
+      return await fetch(`${apiPath}/create/create-payment-detail.php`, {
+        body: formData,
+        method: "POST",
+      })
+        .then((data) => data.json())
+        .catch((error) => console.log(error));
+    } catch (error) {
+      console.log(error);
+      return { status: 400, message: `Bad request: ${error}` };
+    }
+  } else if (action === "updateStepOne") {
+    // สร้างขั้นที่ 1
+    try {
+      await fetch(`${apiPath}/update/update-payment-detail-by-id.php`, {
+        body: formData,
+        method: "POST",
+      })
+        .then((data) => data.text())
+        .catch((error) => console.log(error));
+
+      return null;
+    } catch (error) {
+      console.log(error);
+      return { status: 400, message: `Bad request: ${error}` };
+    }
+  } else if (action === "addItem") {
+    // สร้างขั้นที่ 1
+    try {
+      const response = await fetch(
+        `${apiPath}/create/create-payment-detail-item.php`,
+        {
+          body: formData,
+          method: "POST",
+        }
+      )
+        .then((data) => data.text())
+        .catch((error) => console.log(error));
+
+      return response;
+    } catch (error) {
+      console.log(error);
+      return { status: 400, message: `Bad request: ${error}` };
+    }
+  } else if (action === "delete") {
+    // ลบ
+    try {
+      await fetch(`${apiPath}/delete/delete-payment-detail-by-id.php`, {
+        method: "post",
+        body: formData,
+      })
+        .then((data) => data.text())
+        .catch((error) => console.log(error));
+      return null;
+    } catch (error) {
+      console.log(error);
+      return { status: 400, message: `Bad request: ${error}` };
+    }
+  } else if (action === "deletePaymentDetailGroup") {
+    // ลบ
+    try {
+      await fetch(`${apiPath}/delete/delete-payment-detail-by-group.php`, {
+        method: "post",
+        body: formData,
+      })
+        .then((data) => data.text())
+        .catch((error) => console.log(error));
+      return null;
+    } catch (error) {
+      console.log(error);
+      return { status: 400, message: `Bad request: ${error}` };
+    }
+  } else if (action === "deleteItems") {
+    // ลบรายละเอียด
+    try {
+      await fetch(`${apiPath}/delete/delete-payment-detail-item-by-id.php`, {
         method: "post",
         body: formData,
       })
@@ -248,36 +321,23 @@ export async function paymentDetailAction({ request }) {
       console.log(error);
       return { status: 400, message: `Bad request: ${error}` };
     }
-  } else if (action === "delete") {
-    // ลบ
-    // try {
-    //   await fetch(`${apiPath}/delete/delete-payment-by-id.php`, {
-    //     method: "post",
-    //     body: formData,
-    //   })
-    //     .then((data) => data.text())
-    //     .catch((error) => console.log(error));
-    //   return null;
-    // } catch (error) {
-    //   console.log(error);
-    //   return { status: 400, message: `Bad request: ${error}` };
-    // }
-  } else if (action === "update") {
+  } else if (action === "updateItem") {
     // แก้ไข
     // for (var p of formData.entries()) {
     //   console.log(p);
     // }
-    // try {
-    //   const r = await fetch(`${apiPath}/update/update-payment-by-id.php`, {
-    //     method: "post",
-    //     body: formData,
-    //   })
-    //     .then((data) => data.text())
-    //     .catch((error) => console.log(error));
-    //   return null;
-    // } catch (error) {
-    //   console.log(error);
-    //   return { status: 400, message: `Bad request: ${error}` };
-    // }
+    try {
+      await fetch(`${apiPath}/update/update-payment-detail-item-by-id.php`, {
+        method: "post",
+        body: formData,
+      })
+        .then((data) => data.text())
+        .catch((error) => console.log(error));
+
+      return null;
+    } catch (error) {
+      console.log(error);
+      return { status: 400, message: `Bad request: ${error}` };
+    }
   }
 }

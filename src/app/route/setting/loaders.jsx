@@ -75,6 +75,17 @@ export async function paymentDetailLoader({ request }) {
   const rt = url.searchParams.get("rt") || "";
   // student type
   const st = url.searchParams.get("st") || "";
+  const action = url.searchParams.get("action") || "";
+  const id = url.searchParams.get("id") || "";
+
+  if (action === "load-item") {
+    const response = await fetch(
+      `${apiPath}/read/read-payment-detail-items-by-id.php?id=${id}`
+    )
+      .then((data) => data.json())
+      .catch((error) => console.log(error));
+    return { ...response };
+  }
 
   const response = await fetch(
     `${apiPath}/read/read-payment-detail-by-items.php?s=${s}&ay=${ay}&rt=${rt}&st=${st}`
@@ -82,9 +93,5 @@ export async function paymentDetailLoader({ request }) {
     .then((data) => data.json())
     .catch((error) => console.log(error));
 
-  if (response.status === 200 || response.status === 404) {
-    return { ...response };
-  } else {
-    return null;
-  }
+  return { ...response };
 }

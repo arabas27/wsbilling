@@ -1,8 +1,11 @@
 import clsx from "clsx";
 import PropTypes from "prop-types";
+import { twMerge } from "tailwind-merge";
 
 export function InputGroup({ children, className }) {
-  return <div className={clsx("flex flex-col", className)}>{children}</div>;
+  return (
+    <div className={twMerge(clsx("flex flex-col", className))}>{children}</div>
+  );
 }
 
 export function TextInput({
@@ -14,6 +17,7 @@ export function TextInput({
   onClick,
   disabled,
   onChange,
+  value,
 }) {
   return (
     <input
@@ -26,6 +30,7 @@ export function TextInput({
       onClick={onClick}
       disabled={disabled}
       onChange={onChange}
+      value={value}
     />
   );
 }
@@ -73,11 +78,12 @@ export function NumberInput({
   id,
   className,
   placeholder,
-  defaultValue = 0,
+  defaultValue,
   onClick,
   onChange,
   disabled = false,
   reference,
+  value,
 }) {
   return (
     <input
@@ -94,6 +100,7 @@ export function NumberInput({
       onChange={onChange}
       disabled={disabled}
       ref={reference}
+      value={value}
     />
   );
 }
@@ -222,13 +229,13 @@ export function ControlledSelect({
   );
 }
 
-export function FileInput({ name, id, className }) {
-  return (
-    <input
-      type="file"
-      className={clsx("border border-gray-600 rounded px-3 py-1", className)}
-      name={name}
-      id={id ? id : name}
-    />
-  );
-}
+// export function FileInput({ name, id, className }) {
+//   return (
+//     <input
+//       type="file"
+//       className={clsx("border border-gray-600 rounded px-3 py-1", className)}
+//       name={name}
+//       id={id ? id : name}
+//     />
+//   );
+// }

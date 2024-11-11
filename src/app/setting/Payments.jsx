@@ -281,7 +281,7 @@ export default function Payments() {
             <div>จำนวน 0 รายการ</div>
           </div>
           <Form
-            className="flex items-center justify-center my-3"
+            className="flex items-center justify-center my-3 w-10/12 mx-auto"
             autoComplete="off"
           >
             <div

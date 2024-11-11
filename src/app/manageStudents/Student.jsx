@@ -522,7 +522,6 @@ const Pagination = (props) => {
                 p: props.p,
                 setSearch: props.setSearch,
                 pageAmount: props.pageAmount,
-                p: props.p,
               }}
               key={index}
             />
@@ -606,6 +605,7 @@ export default function Student() {
         submit(formData, {
           method: "GET",
         });
+        setIsTyping(false);
       }, 1000);
 
       return () => {
@@ -629,6 +629,7 @@ export default function Student() {
 
     if (name === "q") {
       setSearch((prev) => ({ ...prev, p: 1 }));
+      setIsTyping(true);
     }
   };
   // เรียก pop up เพิ่มรายการนักเรียน

@@ -197,7 +197,7 @@ function Row({ data, index, editor, handleUpdate }) {
     const formData = new FormData(event.currentTarget);
     formData.append("action", "toggleStatus");
     formData.append("id", data.id);
-    formData.append("status", data.status === "ใช้งาน" ? "ยกเลิก" : "ใช้งาน");
+    formData.append("status", data.status === "เปิด" ? "ยกเลิก" : "เปิด");
     formData.append("editor", editor);
 
     submit(formData, {
@@ -231,7 +231,7 @@ function Row({ data, index, editor, handleUpdate }) {
           <button className="flex items-center justify-center mx-auto">
             <FaPowerOff
               className={clsx("w-5 h-5 mx-auto", {
-                "text-green-600": data.status === "ใช้งาน",
+                "text-green-600": data.status === "เปิด",
                 "text-red-600": data.status === "ยกเลิก",
               })}
             />

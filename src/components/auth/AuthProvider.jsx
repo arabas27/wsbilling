@@ -7,7 +7,7 @@ import { apiPath } from "../../app/config";
 export const AuthContext = createContext({
   user: null,
   login: async () => {},
-  logout: async () => {},
+  logout: () => {},
 });
 
 export function AuthProvider({ children }) {
@@ -28,14 +28,17 @@ export function AuthProvider({ children }) {
       // ถ้าพบ user ให้ทำการบันทึก cookies
       if (response.status === 200) {
         // const expiredDate = new Date(2147483647 * 1000);
-        const cookieApi = Cookies.withAttributes({ path: "", expires: 365 });
+        const cookieApi = Cookies.withAttributes({ path: "/", expires: 365 });
         cookieApi.set("username", response.data.username);
         cookieApi.set("auth", response.data.auth);
         cookieApi.set("token", response.data.token);
         cookieApi.set("title", response.data.title);
         cookieApi.set("firstname", response.data.firstname);
         cookieApi.set("lastname", response.data.lastname);
-        return response.data;
+
+        navigate("/", { replace: true });
+      } else {
+        return response;
       }
     } catch (error) {
       console.log(error);
@@ -45,9 +48,19 @@ export function AuthProvider({ children }) {
   }, []);
 
   // call this function to sign out logged in user
-  const logout = useCallback(async () => {
+  const logout = useCallback(() => {
     // ล้างค่า user ใน cookie
+    const cookieApi = Cookies.withAttributes({ path: "/", expires: 365 });
+    cookieApi.remove("username");
+    cookieApi.remove("auth");
+    cookieApi.remove("token");
+    cookieApi.remove("title");
+    cookieApi.remove("firstname");
+    cookieApi.remove("lastname");
     // redirect ไปยังหน้า login
+    navigate("login", {
+      replace: true,
+    });
   }, []);
 
   // จำค่า user ไว้ใน context

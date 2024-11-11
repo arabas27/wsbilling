@@ -9,3 +9,21 @@
     margin: 0;
   }
 }
+
+@font-face {
+  font-family: THSarabunNew;
+  src: url(./assets/fonts/THSarabunNew/THSarabunNew.ttf);
+}
+
+.THSarabunNew {
+  font-family: THSarabunNew;
+}
+
+@font-face {
+  font-family: THSarabunPSK;
+  src: url(./assets/fonts/THSarabunPSK/THSarabun.ttf);
+}
+
+.THSarabunPSK {
+  font-family: THSarabunPSK;
+}

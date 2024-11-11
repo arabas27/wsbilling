@@ -95,3 +95,16 @@ export async function paymentDetailLoader({ request }) {
 
   return { ...response };
 }
+
+// receiver
+export async function receiverLoader({ request }) {
+  const url = new URL(request.url);
+  // query
+  const q = url.searchParams.get("q") || "";
+
+  const response = await fetch(`${apiPath}/read/read-receiver-by-q.php?q=${q}`)
+    .then((data) => data.json())
+    .catch((error) => console.log(error));
+
+  return { ...response, q };
+}

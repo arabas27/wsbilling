@@ -11,6 +11,7 @@ export function InputGroup({ children, className }) {
 export function TextInput({
   name,
   id,
+  type = "text",
   defaultValue,
   className,
   placeholder,
@@ -21,7 +22,7 @@ export function TextInput({
 }) {
   return (
     <input
-      type="text"
+      type={type}
       className={clsx("border border-gray-600 rounded px-3 py-1", className)}
       name={name}
       id={id ? id : name}
@@ -56,6 +57,7 @@ export function SearchTextInput({
       onClick={onClick}
       onChange={onChange}
       disabled={disabled}
+      autoComplete="off"
     />
   );
 }

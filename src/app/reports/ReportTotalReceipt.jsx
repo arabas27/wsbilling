@@ -36,7 +36,7 @@ import {
   useSubmit,
 } from "react-router-dom";
 import { numberWithCommas, removeCommas } from "../../components/API";
-import { apiPath, user } from "../config";
+import { apiPath, receiptType, user } from "../config";
 import OverlaySpinner from "../../components/OverlaySpinner";
 
 /* pop up component */
@@ -800,154 +800,7 @@ const Row = (props) => {
   );
 };
 
-export default function PaymentDetail() {
-  const submit = useSubmit();
-  const fetcherLoadItemForUpdate = useFetcher({ key: "load-items-update" });
-  const { payment_detail, student_type, academic_year, payments } =
-    useLoaderData();
-  const { state } = useNavigation();
-  const [isShowPopUp, setIsShowPopUp] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  // รับค่า id ของขั้นที่ 1
-  const [paymentID, setPaymentID] = useState("0");
-
-  const arrayStudentType =
-    student_type && student_type.length > 0
-      ? Array.from(student_type.map((element) => element.student_type))
-      : [];
-
-  const arrayAcademicYear =
-    academic_year && academic_year.length > 0
-      ? Array.from(academic_year.map((element) => element.academic_year))
-      : [];
-
-  const arrayPayments =
-    payments && payments.length > 0
-      ? Array.from(payments.map((element) => element.payment_list))
-      : [];
-
-  // ค่า default ของ input ใน pop up
-  const [values, setValues] = useState({
-    action: "create1",
-    id: -1,
-    semester: "1",
-    academicYear: arrayAcademicYear[0],
-    receiptType: "ใบเสร็จรับเงิน สพฐ.",
-    studentType: arrayStudentType[0],
-    payments: payments[0],
-    unit: "0",
-    pricePerUnit: "0",
-  });
-  // ตัวเก็บข้อมูลสำหรับบันทึกใน database
-  const [items, setItems] = useState([]);
-
-  // แสดง loading
-  useEffect(() => {
-    if (state === "idle") setIsLoading(false);
-    if (state !== "idle") setIsLoading(true);
-  }, [state]);
-
-  // เลือก payment เพื่อไปแก้ไข
-  const handleGetItemById = (props) => {
-    fetcherLoadItemForUpdate.load(
-      `/setting/payment-detail?action=load-item&id=${props.id}`
-    );
-
-    setValues((prev) => ({
-      ...prev,
-      id: props.id,
-      action: "create2",
-      semester: props.semester,
-      academicYear: props.academic_year,
-      receiptType: props.receipt_type,
-      studentType: props.student_type,
-    }));
-
-    setPaymentID(props.id);
-    setIsShowPopUp(true);
-  };
-
-  const handleTogglePopup = (action) => {
-    if (action === "add") {
-      setValues({
-        action: "create1",
-        semester: "1",
-        academicYear: parseInt(new Date().getFullYear(0) + 543),
-        receiptType: "ใบเสร็จรับเงิน สพฐ.",
-        studentType: arrayStudentType[0],
-        payments: payments[0],
-        unit: "0",
-        pricePerUnit: "0",
-      });
-      setIsShowPopUp(true);
-    }
-  };
-
-  const handleCheckAll = () => {
-    const checkAllCheckbox = document.querySelector('[name="checkAll"]');
-    const allCheckbox = document.querySelectorAll('[name^="checkbox#"]');
-
-    allCheckbox.forEach(
-      (element) => (element.checked = checkAllCheckbox.checked)
-    );
-  };
-
-  // ลบเป็นกลุ่ม
-  const handleDeletePaymentDetailByGroup = () => {
-    const allCheckbox = document.querySelectorAll('[name^="checkbox#"]');
-    const arraySelected = [];
-
-    allCheckbox.forEach((element) => {
-      element.checked && arraySelected.push(element.value);
-    });
-
-    if (arraySelected.length === 0) {
-      alert("ยังไม่ได้เลือกรายการที่ต้องการลบ");
-      return;
-    }
-
-    const cf = confirm("ยืนยันการลบรายการที่เลือก");
-
-    if (!cf) return;
-
-    const formData = new FormData();
-    formData.append("id", JSON.stringify(arraySelected));
-    formData.append("action", "deletePaymentDetailGroup");
-
-    submit(formData, {
-      method: "POST",
-    });
-
-    allCheckbox.forEach((element) => (element.checked = false));
-  };
-
-  const handleChange = (event) => {
-    const receiveForm = new FormData(event.target.form);
-    const sendForm = new FormData();
-    sendForm.append("s", receiveForm.get("searchSemester"));
-    sendForm.append("ay", receiveForm.get("searchAcademicYear"));
-    sendForm.append("rt", receiveForm.get("searchReceiptType"));
-    sendForm.append("st", receiveForm.get("searchStudentType"));
-
-    submit(sendForm, {
-      method: "GET",
-    });
-  };
-
-  // props ของ popup
-  const popupProps = {
-    values,
-    arrayStudentType,
-    arrayAcademicYear,
-    arrayPayments,
-    setIsShowPopUp,
-    items,
-    setItems,
-    setIsLoading,
-    paymentID,
-    setPaymentID,
-  };
-
+export default function ReportTotalReceipt() {
   return (
     <div className="p-1 md:p-6">
       <div className="flex flex-col items-center gap-6 md:mx-16 py-6">
@@ -962,72 +815,49 @@ export default function PaymentDetail() {
         <Card className="w-full md:w-9/12 lg:w-8/12 xl:w-6/12 p-3">
           <div className="flex justify-between border-b-4 border-sky-300">
             <div className="text-lg font-bold">ค้นหา</div>
-            <div>จำนวน {payment_detail.length} รายการ</div>
+            <div>จำนวน รายการ</div>
           </div>
           {/* filter */}
           <Form
-            className="flex flex-col gap-2 items-center justify-center my-3"
+            className="flex flex-col gap-2 my-3 w-10/12 mx-auto"
             role="search"
           >
-            <InputGroup className="w-10/12">
-              <div className="flex">
-                <label htmlFor="searchSemester">เทอม</label>
-                <div className="px-2">/</div>
-                <label htmlFor="searchAcademicYear">ปีการศึกษา</label>
-              </div>
-              <div className="flex items-center gap-3 w-full">
+            <InputGroup className="flex-row gap-3">
+              <label className="flex flex-col w-full">
+                เทอม
+                <Select name="semester" optionTexts={["1", "2"]} />
+              </label>
+              <label className="flex flex-col w-full">
+                ปีการศึกษา
+                <Select name="semester" optionTexts={["2567", "2"]} />
+              </label>
+            </InputGroup>
+            <InputGroup className="flex-row gap-3">
+              <label className="flex flex-col w-full">
+                ประเภทใบเสร็จ
+                <Select name="receiptType" optionTexts={[receiptType[0]]} />
+              </label>
+            </InputGroup>
+            <InputGroup className="flex-row gap-3">
+              <label className="flex flex-col w-full">
+                เล่มที่
                 <Select
-                  className="w-full"
-                  name="searchSemester"
-                  optionTexts={["ทั้งหมด", 1, 2]}
-                  optionValues={["", 1, 2]}
-                  defaultValue=""
-                  onChange={handleChange}
+                  name="bookNumber"
+                  optionTexts={["ทั้งหมด", "17668"]}
+                  optionValues={["", "17688"]}
                 />
-                <div>/</div>
+              </label>
+            </InputGroup>
+            <InputGroup className="flex-row gap-3">
+              <label className="flex flex-col w-full">
+                ช่วงเลขที่ใบเสร็จ
                 <Select
-                  className="w-full"
-                  name="searchAcademicYear"
-                  optionTexts={["ทั้งหมด", ...arrayAcademicYear]}
-                  optionValues={["", ...arrayAcademicYear]}
-                  defaultValue=""
-                  onChange={handleChange}
+                  name="bookNumber"
+                  optionTexts={["ทั้งหมด", "17668"]}
+                  optionValues={["", "17688"]}
                 />
-              </div>
+              </label>
             </InputGroup>
-            <InputGroup className="w-10/12">
-              <label htmlFor="searchReceiptType">ประเภทใบเสร็จ</label>
-              <Select
-                name="searchReceiptType"
-                optionTexts={["ทั้งหมด", "ใบเสร็จรับเงิน สพฐ."]}
-                optionValues={["", "ใบเสร็จรับเงิน สพฐ."]}
-                defaultValue="ใบเสร็จรับเงิน สพฐ."
-                onChange={handleChange}
-              />
-            </InputGroup>
-            <InputGroup className="w-10/12">
-              <label htmlFor="searchStudentType">ประเภทนักเรียน</label>
-              <Select
-                name="searchStudentType"
-                optionTexts={["ทั้งหมด", ...arrayStudentType]}
-                optionValues={["", ...arrayStudentType]}
-                defaultValue=""
-                onChange={handleChange}
-              />
-            </InputGroup>
-            {/* <InputGroup className="w-10/12">
-              <label htmlFor="search">คำค้นหา</label>
-              <div className="flex items-center justify-center gap-3 w-full">
-                <TextInput
-                  className="w-full"
-                  name="search"
-                  placeholder="พิมพ์รายการรับชำระที่ต้องการค้นหา"
-                />
-                <button className="bg-sky-600 hover:bg-sky-500 text-white rounded-full p-2">
-                  <FaSearch className="w-4 h-4" />
-                </button>
-              </div>
-            </InputGroup> */}
           </Form>
         </Card>
       </div>
@@ -1043,7 +873,7 @@ export default function PaymentDetail() {
         </DefaultButton>
         <DefaultButton
           className="flex flex-row bg-red-600 hover:bg-red-500 text-white"
-          onClick={handleDeletePaymentDetailByGroup}
+          /*  onClick={handleDeletePaymentDetailByGroup} */
         >
           <FaTrashAlt className="w-6 h-6" />
           <div className="font-bold  hidden sm:block">ลบ</div>
@@ -1060,7 +890,7 @@ export default function PaymentDetail() {
                   type="checkbox"
                   name="checkAll"
                   id="checkAll"
-                  onChange={handleCheckAll}
+                  /*    onChange={handleCheckAll} */
                 />
               </THeadCol>
               <THeadCol>ที่</THeadCol>
@@ -1074,7 +904,7 @@ export default function PaymentDetail() {
             </THeadRow>
           </THead>
           <tbody>
-            {!payment_detail ||
+            {/*  {!payment_detail ||
               (payment_detail.length === 0 && (
                 <tr>
                   <td className="text-center p-3" colSpan={9}>
@@ -1090,16 +920,16 @@ export default function PaymentDetail() {
                   {...{ index: index, handleGetItemById }}
                   key={index}
                 />
-              ))}
+              ))} */}
           </tbody>
         </Table>
       </div>
 
       {/* Pop up */}
-      {isShowPopUp && <Popup {...popupProps} />}
+      {/* {isShowPopUp && <Popup {...popupProps} />} */}
 
       {/* show loading */}
-      {isLoading && <OverlaySpinner />}
+      {/*  {isLoading && <OverlaySpinner />} */}
     </div>
   );
 }

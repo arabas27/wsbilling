@@ -17,7 +17,7 @@ import {
 } from "../../components/table";
 import { DefaultButton } from "../../components/buttons";
 import { useState } from "react";
-import { PopUpContainer } from "../../components/popup";
+import { PopupContainer } from "../../components/popup";
 
 export default function OtherPayments() {
   const [isShowPopUp, setIsShowPopUp] = useState(false);
@@ -104,7 +104,7 @@ export default function OtherPayments() {
 
       {/* Pop up */}
       {isShowPopUp && (
-        <PopUpContainer>
+        <PopupContainer>
           <Card
             className="bg-white w-11/12 sm:w-9/12 md:w-6/12 lg:w-4/12 xl:w-3/12 p-3"
             style={{ marginTop: window.scrollY + window.innerHeight / 7 }}
@@ -141,7 +141,7 @@ export default function OtherPayments() {
               </div>
             </div>
           </Card>
-        </PopUpContainer>
+        </PopupContainer>
       )}
     </div>
   );
